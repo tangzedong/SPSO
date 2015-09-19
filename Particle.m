@@ -1,6 +1,7 @@
 classdef Particle    
     properties
         uvec; % (genotype)--> decode to find design variables --> (phenotype) 
+        velocity; %individial velocity
         lbvec; %individial best vector
         
         %individial best feature
@@ -17,7 +18,9 @@ classdef Particle
     end    
     methods        
         function object = initialize(object,D)            
-            object.uvec = rand(1,D);            
+            object.uvec = rand(1,D);
+            object.velocity = 0.1 * rand(1, D);
+            object.lbvec = object.uvec;
         end
         
         function [object,calls] = evaluate(object,Tasks,p_il,no_of_tasks,options)     
@@ -44,7 +47,7 @@ classdef Particle
             calls = funcCount;
         end
         
-        function object=crossover(object,p1,p2,cf)
+        function object=forward(object,p1,p2,cf)
             object.uvec=0.5*((1+cf).*p1.uvec + (1-cf).*p2.uvec);
             object.uvec(object.uvec>1)=1;
             object.uvec(object.uvec<0)=0;
