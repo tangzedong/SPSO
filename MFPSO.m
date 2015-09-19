@@ -1,7 +1,17 @@
-function data_MFPSO = MFPSO(Tasks,pop,maxgen,selection_process,rmp,p_il)
+function data_MFPSO = MFPSO(Tasks, option)
     clc    
     tic   
 %%%初始化参数
+    c1 = option.c1;
+    c2 = option.c2;
+    c3 = option.c3;
+    momentum = option.momentum;
+    pop = option.pop;
+    maxgen = option.maxgen;
+    rmp = option.rmp;
+    p_il = option.p_il;
+    rho = option.alpha;
+    selection_process = option.selection_process;
     if mod(pop,2) ~= 0  %保证种群数是偶数
         pop = pop + 1;
     end
@@ -49,9 +59,11 @@ function data_MFPSO = MFPSO(Tasks,pop,maxgen,selection_process,rmp,p_il)
         bestobj(i)=swarm(1).factorial_costs(i);   %bestobj(i)记录目标函数(i)的最好值
         EvBestFitness(i,1)=bestobj(i);              %EvBestFitness(i)记录每一代的(i)最优值
         bestInd_data(i)=swarm(1);              %bestInd_data(i)记录最优个体
+        bestvec(i, :) = swarm(1).uvec;
+        %bestfitness(i) = swarm(1).scalar_fitness;
     end
     for i=1:pop
-        [minfactorial,minindex]=min(swarm(i).factorial_ranks);
+        [minfactorial, minindex]=min(swarm(i).factorial_ranks);
         x=find(swarm(i).factorial_ranks == minfactorial);
         equivalent_skills=length(x);
         if equivalent_skills>1
@@ -67,8 +79,6 @@ function data_MFPSO = MFPSO(Tasks,pop,maxgen,selection_process,rmp,p_il)
         end
     end
         
-    c1 = 0.2; %learning rate 1 learn to historial best particle
-    c2 = 1.2; %learning rate 2 learn to global best particle
     generation=1;
     while generation <= maxgen 
         generation = generation + 1;
@@ -77,23 +87,36 @@ function data_MFPSO = MFPSO(Tasks,pop,maxgen,selection_process,rmp,p_il)
         for i = 1 : pop
             Vel = swarm(i).velocity;
             Vel = momentum * Vel ...
-                + c2 * rand() * bsxfun(@minus, gobalBest, swarm(i).uvec) ...
-                + c1 * rand() * bsxfun(@minus, localBests, swarm(i).uvec);
+                + c2 * rand() * bsxfun(@minus, bestvec(round(swarm(i).skill_factor)), swarm(i).uvec) ...
+                + c1 * rand() * bsxfun(@minus, swarm(i).lbvec, swarm(i).uvec);
             swarm(i).velocity = Vel;
-            swarm(i).velocity(Vel <= -1) = -1;
-            swarm(i).velocity(Vel >= 1) = 1;
+            swarm(i).velocity(Vel <= -0.1) = -0.1;
+            swarm(i).velocity(Vel >= 0.1) = 0.1;
             
             PS = swarm(i).uvec;
-            PS = alpha * PS + (MaxIter - i)/MaxIter * Vel;
+            PS = rho * PS + (maxgen - i)/maxgen * Vel;
             swarm(i).uvec = PS;
             swarm(i).uvec(PS < 0) = 0;
             swarm(i).uvec(PS > 1) = 1;
         end
         
-        %%评估新生成的个体
+        for i = 1:pop
+            s2 = ceil(pop * rand());
+            if (swarm(i).skill_factor == swarm(s2).skill_factor || rand() < rmp)
+                swarm(i).velocity = swarm(i).velocity + c3 * rand() * (swarm(s2).uvec - swarm(i).uvec);
+                if rand() < 0.5
+                    swarm(i).skill_factor = swarm(s2).skill_factor;
+                else
+                    swarm(i).skill_factor = swarm(s2).skill_factor;
+                end
+            end
+
+        end
+        
+        %%评估更新后的个体
         parfor i = 1 : pop            
-            [swarm(i),calls_per_individual(i)] = evaluate(swarm(i),Tasks,p_il,ntasks,localsearchopt);    
-        end             
+            [swarm(i),calls_per_individual(i)] = evaluate(swarm(i),Tasks,p_il,ntasks,local_search_opt);    
+        end
         fnceval_calls=fnceval_calls + sum(calls_per_individual);
         TotalEvaluations(generation)=fnceval_calls;
         
@@ -108,6 +131,7 @@ function data_MFPSO = MFPSO(Tasks,pop,maxgen,selection_process,rmp,p_il)
                 swarm(j).factorial_ranks(i)=j;
             end
             if swarm(1).factorial_costs(i)<=bestobj(i)
+                bestvec(i,:) = swarm(1).uvec;
                 bestobj(i)=swarm(1).factorial_costs(i);
                 bestInd_data(i)=swarm(1);
             end
@@ -117,15 +141,19 @@ function data_MFPSO = MFPSO(Tasks,pop,maxgen,selection_process,rmp,p_il)
             [minfactorial,minindex]=min(swarm(i).factorial_ranks);
             swarm(i).skill_factor=minindex;
             swarm(i).scalar_fitness=1/minfactorial;
-            if swarm(i).lskill_fitness < swarm(i).skill_fitness
+            %记录个体历史最优值
+            if swarm(i).scalar_fitness > swarm(i).lscalar_fitness
                 swarm(i).lbvec = swarm(i).uvec;
                 swarm(i).lfactorial_rank = swarm(i).factorial_rank;
                 swarm(i).lfactorial_cost = swarm(i).factorial_cost;
             end
-            if bestfitness < swarm(i).skill_fitness
-                bestvec = swarm(i).uvec;
-                bestfitness = swarm(i).skill_fitness;
-            end
+            %记录最有个体
+%             for j = 1:ntask
+%                 if swarm(i).scalar_fitness > bestfitness(i)
+%                     bestvec(i,:) = swarm(i).uvec;
+%                     bestfitness(i) = swarm(i).scalar_fitness;
+%                 end
+%             end
         end   
         
         disp(['MFPSO Generation = ', num2str(generation), ' best factorial costs = ', num2str(bestobj)]);

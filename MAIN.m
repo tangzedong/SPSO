@@ -4,7 +4,8 @@
 % For suggestions please contact: Abhishek Gupta (Email: abhishekg@ntu.edu.sg or
 % agup839@aucklanduni.ac.nz or abhi.nitr2010@gmail.com)
 
-clear all
+clear
+close all
 %% Example 1 - (40-D Rastrigin, 30-D Ackley)
 % % Rastrigin function definition
 % n=40;
@@ -27,15 +28,15 @@ n=30;
 Tasks(1).dims=n;
 M=eye(n,n);
 Tasks(1).fnc=@(x)Sphere(x,M);
-Tasks(1).Lb=-100*ones(1,n);
-Tasks(1).Ub=100*ones(1,n);
-% Weierstrass function definition
+Tasks(1).Lb=-50*ones(1,n);
+Tasks(1).Ub=50*ones(1,n);
+% Rastrigin function definition
 n=30;
 Tasks(2).dims=n;
 M=orth(randn(n,n));
-Tasks(2).fnc=@(x)Weierstrass(x,M);
-Tasks(2).Lb=-0.5*ones(1,n);
-Tasks(2).Ub=0.5*ones(1,n);
+Tasks(2).fnc=@(x)Ackley(x,M);
+Tasks(2).Lb=-50*ones(1,n);
+Tasks(2).Ub=50*ones(1,n);
 
 %% Example 3 - (40-D Rastrigin, 50-D Ackley, 20-D Sphere)
 % % Rastrigin function definition
@@ -84,12 +85,17 @@ Tasks(2).Ub=0.5*ones(1,n);
 % For large population sizes, consider using the Parallel Computing Toolbox
 % of MATLAB.
 % Else, program can be slow.
-pop=30; % population size
-gen=100; % generation count
-selection_pressure = 'roulette wheel'; % choose either 'elitist' or 'roulette wheel'
-p_il = 1; % probability of individual learning (BFGA quasi-Newton Algorithm) --> Indiviudal Learning is an IMPORTANT component of the MFEA.
-rmp=0.3; % random mating probability
-% data_MFEA=MFEA(Tasks,pop,gen,selection_pressure,rmp,p_il);
+option.pop=100; % population size
+option.maxgen=100; % generation count
+option.selection_process = 'roulette wheel'; % choose either 'elitist' or 'roulette wheel'
+option.p_il = 1; % probability of individual learning (BFGA quasi-Newton Algorithm) --> Indiviudal Learning is an IMPORTANT component of the MFEA.
+option.rmp=0.3; % random mating probability
+option.c1 = 1;
+option.c2 = 1.2;
+option.c3 = 0.5;
+option.alpha = 1;
+option.momentum = 1;
+data_MFPSO=MFPSO(Tasks,option);
 
 % "task_for_comparison_with_SOO" compares performance of corresponding task in MFO with SOO.
 % For Instance, In EXAMPLE 1 ...
@@ -97,5 +103,5 @@ rmp=0.3; % random mating probability
 % Rastrigin in SOO.
 % "task_for_comparison_with_SOO" = 2 --> compares 30D Ackley in MFO with
 % 30D Ackley in SOO.
-task_for_comparison_with_SOO = 2;
-data_SOO=SOO(Tasks(task_for_comparison_with_SOO),task_for_comparison_with_SOO,pop,gen,selection_pressure,p_il);     
+% task_for_comparison_with_SOO = 2;
+% data_SOO=SOO(Tasks(task_for_comparison_with_SOO),task_for_comparison_with_SOO,pop,gen,selection_pressure,p_il);     
