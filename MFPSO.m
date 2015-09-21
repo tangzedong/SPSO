@@ -82,6 +82,12 @@ function data_MFPSO = MFPSO(Tasks, option)
     generation=1;
     while generation <= maxgen 
         generation = generation + 1;
+        for i = 1:pop
+            factcost(i, :) = swarm(i).factorial_costs;
+            velevery(i, :) = swarm(i).velocity;
+            uvecevery(i, :) = swarm(i).uvec;
+        end
+        generation;
 %%to do 
 %%加入pso的个体速度和位置的更新，选择最优个体，记录局部最优位置
         for i = 1 : pop
@@ -94,7 +100,11 @@ function data_MFPSO = MFPSO(Tasks, option)
             swarm(i).velocity(Vel >= 0.1) = 0.1;
             
             PS = swarm(i).uvec;
-            PS = rho * PS + (maxgen - i)/maxgen * Vel;
+            
+            if i < 100
+                velscalar = (100 - i)/100;
+            end
+            PS = rho * PS + velscalar * Vel;
             swarm(i).uvec = PS;
             swarm(i).uvec(PS < 0) = 0;
             swarm(i).uvec(PS > 1) = 1;
@@ -102,15 +112,18 @@ function data_MFPSO = MFPSO(Tasks, option)
         
         for i = 1:pop
             s2 = ceil(pop * rand());
+            while i ==s2
+                s2 = ceil(pop * rand());
+            end
             if (swarm(i).skill_factor == swarm(s2).skill_factor || rand() < rmp)
-                swarm(i).velocity = swarm(i).velocity + c3 * rand() * (swarm(s2).uvec - swarm(i).uvec);
+                swarm(i).velocity = swarm(i).velocity + c3 * rand() * (swarm(s2).lbvec - swarm(i).lbvec);
+                Vel = swarm(i).velocity;
+                swarm(i).velocity(Vel <= -0.1) = -0.1;
+                swarm(i).velocity(Vel >= 0.1) = 0.1;
                 if rand() < 0.5
-                    swarm(i).skill_factor = swarm(s2).skill_factor;
-                else
                     swarm(i).skill_factor = swarm(s2).skill_factor;
                 end
             end
-
         end
         
         %%评估更新后的个体
@@ -127,7 +140,7 @@ function data_MFPSO = MFPSO(Tasks, option)
             end
             [~,y]=sort(factorial_cost);
             swarm=swarm(y);
-            for j=1:2*pop
+            for j=1:pop
                 swarm(j).factorial_ranks(i)=j;
             end
             if swarm(1).factorial_costs(i)<=bestobj(i)
@@ -147,13 +160,6 @@ function data_MFPSO = MFPSO(Tasks, option)
                 swarm(i).lfactorial_rank = swarm(i).factorial_rank;
                 swarm(i).lfactorial_cost = swarm(i).factorial_cost;
             end
-            %记录最有个体
-%             for j = 1:ntask
-%                 if swarm(i).scalar_fitness > bestfitness(i)
-%                     bestvec(i,:) = swarm(i).uvec;
-%                     bestfitness(i) = swarm(i).scalar_fitness;
-%                 end
-%             end
         end   
         
         disp(['MFPSO Generation = ', num2str(generation), ' best factorial costs = ', num2str(bestobj)]);

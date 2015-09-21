@@ -19,7 +19,7 @@ classdef Particle
     methods        
         function object = initialize(object,D)            
             object.uvec = rand(1,D);
-            object.velocity = 0.1 * rand(1, D);
+            object.velocity = 0.2 * rand(1, D) - 0.1;
             object.lbvec = object.uvec;
         end
         

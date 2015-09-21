@@ -27,7 +27,7 @@ close all
 n=30;
 Tasks(1).dims=n;
 M=eye(n,n);
-Tasks(1).fnc=@(x)Sphere(x,M);
+Tasks(1).fnc=@(x)Rastrigin(x,M);
 Tasks(1).Lb=-50*ones(1,n);
 Tasks(1).Ub=50*ones(1,n);
 % Rastrigin function definition
@@ -89,10 +89,10 @@ option.pop=100; % population size
 option.maxgen=100; % generation count
 option.selection_process = 'roulette wheel'; % choose either 'elitist' or 'roulette wheel'
 option.p_il = 1; % probability of individual learning (BFGA quasi-Newton Algorithm) --> Indiviudal Learning is an IMPORTANT component of the MFEA.
-option.rmp=0.3; % random mating probability
+option.rmp = 0.4; % random mating probability
 option.c1 = 1;
 option.c2 = 1.2;
-option.c3 = 0.5;
+option.c3 = 0.8;
 option.alpha = 1;
 option.momentum = 1;
 data_MFPSO=MFPSO(Tasks,option);
