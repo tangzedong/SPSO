@@ -31,7 +31,7 @@ Tasks(1).fnc=@(x)Rastrigin(x,M);
 Tasks(1).Lb=-50*ones(1,n);
 Tasks(1).Ub=50*ones(1,n);
 % Rastrigin function definition
-n=30;
+n=20;
 Tasks(2).dims=n;
 M=orth(randn(n,n));
 Tasks(2).fnc=@(x)Ackley(x,M);
@@ -86,15 +86,14 @@ Tasks(2).Ub=50*ones(1,n);
 % of MATLAB.
 % Else, program can be slow.
 option.pop=100; % population size
-option.maxgen=100; % generation count
-option.selection_process = 'roulette wheel'; % choose either 'elitist' or 'roulette wheel'
+option.maxgen=500; % generation count
 option.p_il = 1; % probability of individual learning (BFGA quasi-Newton Algorithm) --> Indiviudal Learning is an IMPORTANT component of the MFEA.
 option.rmp = 0.4; % random mating probability
-option.c1 = 1;
+option.c1 = 0.4;
 option.c2 = 1.2;
 option.c3 = 0.8;
 option.alpha = 1;
-option.momentum = 1;
+option.momentum = 0.6;
 data_MFPSO=MFPSO(Tasks,option);
 
 % "task_for_comparison_with_SOO" compares performance of corresponding task in MFO with SOO.
