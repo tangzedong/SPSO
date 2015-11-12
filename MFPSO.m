@@ -226,26 +226,11 @@ function [data_MFPSO, ppt] = MFPSO(Tasks, option)
         for i = 1:length(swarm)
             nsucexchg = nsucexchg + swarm(i).success_exchange;
         end
-        oldimpulse = impulse;
-        if nexchange ~= 0
-            impulse = nsucexchg/nexchange;
-        else
-            impulse = rmp;
-        end
+
         for i = 1:length(externalpop)
             ppt2(:, i) = evaluate_TEST(externalpop(i),Tasks,p_il,ntasks,local_search_opt);
         end
-        ppt2n(1, :) = (ppt2(1, :) - min(ppt2(1,:)))./ (max(ppt2(1, :)) - min(ppt2(1,:)));
-        ppt2n(2, :) = (ppt2(2, :) - min(ppt2(2,:)))./ (max(ppt2(2, :)) - min(ppt2(2,:)));
-        [idxppt2, Cppt2, ~, Dppt2] = kmeans(ppt2n', 2, 'MaxIter', 10);
-        if (nnz(Cppt2(1,:) <= Cppt2(2,:)) == ntasks && ...
-                nnz(Cppt2(1, :) < Cppt2(2, :)) > 0) || ...
-                (nnz(Cppt2(1,:) >= Cppt2(2,:)) == ntasks && ...
-                nnz(Cppt2(1, :) > Cppt2(2, :)) > 0)
-            rmp = 1;
-        else
-            rmp = rmp + sign(impulse-oldimpulse) * normrnd(0, 0.01);
-        end
+
         if nnz(bestobj < oldbestobj) >= 0
             oldbestobj(bestobj < oldbestobj) = bestobj(bestobj < oldbestobj);
         else
