@@ -15,6 +15,7 @@ function [data_MFPSO, ppt] = MFPSO(Tasks, option)
     mu = 10;
     impulse = 0;
     rmps = [0.2,0.4,0.6,0.8,1];
+    rmp = rmps(ceil(rand()*length(rmps)));
     if mod(pop,2) ~= 0  %保证种群数是偶数
         pop = pop + 1;
     end
@@ -60,7 +61,7 @@ function [data_MFPSO, ppt] = MFPSO(Tasks, option)
             swarm(j).factorial_ranks(i)=j; 
         end
         bestobj(i) = swarm(1).factorial_costs(i);   %bestobj(i)记录目标函数(i)的最好值
-        oldbest(i) = bestobj(i);
+        oldbestobj(i) = bestobj(i);
         EvBestFitness(i,1) = bestobj(i);              %EvBestFitness(i)记录每一代的(i)最优值
         bestInd_data(i) = swarm(1);              %bestInd_data(i)记录最优个体
         bestvec(i, :) = swarm(1).uvec;
@@ -231,7 +232,7 @@ function [data_MFPSO, ppt] = MFPSO(Tasks, option)
             ppt2(:, i) = evaluate_TEST(externalpop(i),Tasks,p_il,ntasks,local_search_opt);
         end
 
-        if nnz(bestobj < oldbestobj) >= 0
+        if nnz(bestobj < oldbestobj) > 0
             oldbestobj(bestobj < oldbestobj) = bestobj(bestobj < oldbestobj);
         else
             rmp = rmps(ceil(length(rmps)*rand()));
