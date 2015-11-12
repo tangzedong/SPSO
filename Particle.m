@@ -3,7 +3,7 @@ classdef Particle
         uvec; % (genotype)--> decode to find design variables --> (phenotype) 
         velocity; %individial velocity
         lbvec; %individial best vector
-        
+        lbest;
         %individial best feature
         lfactorial_costs;
         lfactorial_ranks;
@@ -15,12 +15,15 @@ classdef Particle
         factorial_ranks;
         scalar_fitness;
         skill_factor;
+        success_exchange;
+        ex_fitness;
     end    
     methods        
         function object = initialize(object,D)            
             object.uvec = rand(1,D);
             object.velocity = 0.2 * rand(1, D) - 0.1;
             object.lbvec = object.uvec;
+            object.success_exchange = 0;
         end
         
         function [object,calls] = evaluate(object,Tasks,p_il,no_of_tasks,options)     
@@ -39,6 +42,12 @@ classdef Particle
                         break;
                     end
                 end
+            end
+        end
+        
+        function [factorial_costs,calls] = evaluate_TEST(object,Tasks,p_il,no_of_tasks,options)
+            for i = 1:no_of_tasks
+                factorial_costs(i)=evalfortest(Tasks(i),object.uvec,p_il,options);
             end
         end
         

@@ -1,6 +1,7 @@
 function obj = Ackley(var,M)
     dim = length(var);
     opt=0*ones(1,dim);
+%     opt(1:ceil(dim * 0.3)) = -10 * ones(1,ceil(dim * 0.3));
     var = (M*(var-opt)')';    
     sum1 = 0; sum2 = 0;
     for i = 1: dim
