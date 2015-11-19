@@ -1,4 +1,4 @@
-function [data_PSO, ppt] = PSO(Task, option)
+function [data_PSO, ppt] = PSO(Tasks, option)
     clc    
     tic   
 %%%初始化参数
@@ -11,14 +11,12 @@ function [data_PSO, ppt] = PSO(Task, option)
     p_il = option.p_il;
     rho = option.alpha;
     ntotalcall = 1;
+    mu = 0.01;
     if mod(pop,2) ~= 0  %保证种群数是偶数
         pop = pop + 1;
     end
-    if ntasks <= 1
-        error('At least 2 tasks required for PSO');
-    end
-
-    dim = Task.dim;  %取任务中最大的维数作为个体向量的维数
+    ntasks = 1;
+    dim = Tasks(1).dims;  %取任务中最大的维数作为个体向量的维数
     local_search_opt = optimoptions(@fminunc,'Display','off','Algorithm','quasi-newton');   %个体实施局部优化
     
     fnceval_calls = 0;      %计算目标函数执行次数
@@ -26,14 +24,14 @@ function [data_PSO, ppt] = PSO(Task, option)
     EvBestFitness = zeros(ntasks,maxgen);  %记录最好适应度
     TotalEvaluations = zeros(1,maxgen);
     bestobj = inf;      %记录找到的最优目标函数值
-
+    funvalue = -1*ones(ntasks,pop);
 %%%初始化种群
     for i = 1 : pop
         swarm(i) = Particle();         
         swarm(i) = initialize(swarm(i),dim);
     end
     for i = 1 : pop
-        [swarm(i),calls_per_individual(i)] = evaluate_SOO(swarm(i),Tasks,p_il,ntasks,local_search_opt);
+        [swarm(i),calls_per_individual(i)] = evaluate_SOO(swarm(i),Tasks,p_il,local_search_opt);
         funvalue(ntotalcall) = swarm(i).factorial_costs;
         ntotalcall = ntotalcall + 1;
     end
@@ -55,13 +53,13 @@ function [data_PSO, ppt] = PSO(Task, option)
     oldbestobj = bestobj;
     EvBestFitness = bestobj;              %EvBestFitness(i)记录每一代的(i)最优值
     bestInd_data = swarm(1);              %bestInd_data(i)记录最优个体
-    bestvec(:) = swarm(1).uvec;
+    bestvec = swarm(1).uvec;
     %         bestfitness(i) = swarm(1).scalar_fitness;
 
     
     generation=0;
     eps = 0.1;
-    while generation <= maxgen && bestobj(1) > eps
+    while generation <= maxgen %&& bestobj(1) > eps
         generation = generation + 1;
         Velmax = 0.3 * exp(-20*(generation-1)/maxgen) + 0.006;
         disp(Velmax);
@@ -84,8 +82,8 @@ function [data_PSO, ppt] = PSO(Task, option)
         for i = 1 : pop
             Vel = swarm(i).velocity;
             Vel = momentum * Vel ...
-                + c2 .* rand() .* bsxfun(@minus, bestvec, swarm(i).uvec) ...
-                + c1 .* rand() .* bsxfun(@minus, swarm(i).lbvec, swarm(i).uvec);
+                + c2 .* rand(1,dim) .* bsxfun(@minus, bestvec, swarm(i).uvec) ...
+                + c1 .* rand(1,dim) .* bsxfun(@minus, swarm(i).lbvec, swarm(i).uvec);
 
             swarm(i).velocity = Vel;
             
@@ -95,14 +93,16 @@ function [data_PSO, ppt] = PSO(Task, option)
             PS = swarm(i).uvec;
 
             PS = rho * PS + Vel;
-            swarm(i).uvec = PS + 0.01*normrnd(0, 0.1,1,dim);
-            swarm(i).uvec(PS < 0) = abs(normrnd(0, 0.1,1,nnz(PS < 0)));
-            swarm(i).uvec(PS > 1) = 1-abs(normrnd(0, 0.1,1,nnz(PS > 1)));
+            swarm(i).uvec = PS;
+            swarm(i).uvec(PS < 0) = 0;
+            swarm(i).uvec(PS > 1) = 1;
         end
         
         %%评估更新后的个体
-        for i = 1 : pop
-            [swarm(i),calls_per_individual(i)] = evaluate_SOO(swarm(i),Tasks,p_il,ntasks,local_search_opt);
+        parfor a = 1 : pop
+            [swarm(a),calls_per_individual(a)] = evaluate_SOO(swarm(a),Tasks,p_il,local_search_opt);
+        end
+        for i = 1:pop
             funvalue(ntotalcall) = swarm(i).factorial_costs;
             ntotalcall = ntotalcall + 1;
         end
@@ -144,8 +144,8 @@ function [data_PSO, ppt] = PSO(Task, option)
     data_PSO.EvBestFitness = EvBestFitness;
     data_PSO.bestInd_data = bestInd_data;
     data_PSO.TotalEvaluations = TotalEvaluations;
-    dtaa_PSO.funvalue = funvalue;
-    save('data_MFPSO','data_MFPSO');
+    data_PSO.funvalue = funvalue;
+    save('data_PSO','data_PSO');
     for i = 1:ntasks
         figure(i) 
         hold all

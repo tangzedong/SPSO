@@ -6,30 +6,32 @@
 
 clear
 n = 30;
-% M=orth(randn(n,n));
-% LoadTest;
-i = 1;
-%close all
-%% Example 1 - (40-D Rastrigin, 30-D Ackley)
-% % Rastrigin function definition
-% n=3;
 M=orth(randn(n,n));
-% Tasks(1) = testfun(3);
-Tasks(1).dims=n;
+Load
 
-Tasks(1).fncLS=@(fnc, x0, option)fminunc(fnc, x0, option);
-Tasks(1).fnc=@(x)Ackley(x,M);
-Tasks(1).Lb=-50*ones(1,n);
-Tasks(1).Ub=50*ones(1,n);
-
-% Ackley function definition
-n=20;
-M=eye(n,n);
-Tasks(2).dims=n;
-Tasks(2).fncLS=@(fnc, x0, option)fminunc(fnc, x0, option);
-Tasks(2).fnc=@(x)Rastrigin(x,M);
-Tasks(2).Lb=-50*ones(1,n);
-Tasks(2).Ub=50*ones(1,n);
+% LoadTest;
+% i = 1;
+% %close all
+% %% Example 1 - (40-D Rastrigin, 30-D Ackley)
+% % % Rastrigin function definition
+% % n=3;
+% M=orth(randn(n,n));
+% % Tasks(1) = testfun(3);
+% Tasks(1).dims=n;
+% 
+% Tasks(1).fncLS=@(fnc, x0, option)fminunc(fnc, x0, option);
+% Tasks(1).fnc=@(x)Ackley(x,M);
+% Tasks(1).Lb=-50*ones(1,n);
+% Tasks(1).Ub=50*ones(1,n);
+% 
+% % Ackley function definition
+% n=20;
+% M=eye(n,n);
+% Tasks(2).dims=n;
+% Tasks(2).fncLS=@(fnc, x0, option)fminunc(fnc, x0, option);
+% Tasks(2).fnc=@(x)Rastrigin(x,M);
+% Tasks(2).Lb=-50*ones(1,n);
+% Tasks(2).Ub=50*ones(1,n);
 
 % Example 2 - (50-D Sphere, 30-D Weierstrass)
 % Sphere function definition
@@ -95,7 +97,7 @@ Tasks(2).Ub=50*ones(1,n);
 % of MATLAB.
 % Else, program can be slow.
 option.pop=100; % population size
-option.maxgen=500; % generation count
+option.maxgen=200; % generation count
 option.p_il = 1; % probability of individual learning (BFGA quasi-Newton Algorithm) --> Indiviudal Learning is an IMPORTANT component of the MFEA.
 option.rmp = 0.2; % random mating probability
 option.c1 = 0.8;
@@ -117,7 +119,20 @@ option.momentum = 0.5;
 %     end
 % end
 % save('experience1mfo.mat','nfc','success');
-[data_MFPSO]=MFPSO(Tasks,option);
+% [data_PSO]=PSO(Tasks(1),option);
+for i = 1:5
+    sumnfc = 0;
+    sumsuc = 0;
+    clear resultdata
+    Tasks(1) = testfun(i);
+    for t = 1:5
+        [data_PSO]=PSO(Tasks(1),option);
+        data_PSO.name1 = Tasks(1).funname;
+        resultdata(t) = data_PSO;
+    end
+    result{i} = resultdata;
+end
+save('data.mat', 'result');
 pop = option.pop; % population size
 gen = option.maxgen; % generation count
 p_il = option.p_il; % probability of individual learning (BFGA quasi-Newton Algorithm) --> Indiviudal Learning is an IMPORTANT component of the MFEA.
